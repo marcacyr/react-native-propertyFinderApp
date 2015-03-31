@@ -64,8 +64,50 @@ var Styles = StyleSheet.create({
   }
 });
 
+function urlForQueryAndPage(key, value, pageNumber) {
+  var data = {
+    country: 'uk',
+    pretty: '1',
+    encoding: 'json',
+    listing_type: 'buy',
+    action: 'search_listings',
+    page: pageNumber
+  };
+  data[key] = value;
+
+  var queryString = Object.keys(data)
+    .map(key => key + '=' + encodeURIComponent(data[key]))
+    .join('&');
+
+  return 'http://api.nestoria.co.uk/api?' + queryString;
+}
+
 class SearchPage extends Component {
+  constructor(props){
+    super(props);
+    this.state = {
+      searchString: 'london',
+      isLoading: false
+    };
+  }
+  onSearchTextChanged(event) {
+    console.log('onSearchTextChanged');
+    this.setState({
+      searchString: event.nativeEvent.text
+    });
+    console.log(this.state.searchString);
+  }
+  _executeQuery(query) {
+    console.log(query);
+    this.setState({ isLoading: true });
+  }
+  onSearchPressed() {
+    var query = urlForQueryAndPage('place_name', this.state.searchString, 1);
+    this._executeQuery(query);
+  }
   render() {
+    var spinner = this.state.isLoading ? (<ActivityIndicatorIOS hidden='true' size='large' />) : (<View/>);
+    console.log('SearchPage.render');
     return (
       <View style={Styles.container}>
         <Text style={Styles.description}>
@@ -77,9 +119,12 @@ class SearchPage extends Component {
         <View style={Styles.flowRight}>
           <TextInput
             style={Styles.searchInput}
+            value={this.state.searchString}
+            onChange={this.onSearchTextChanged.bind(this)}
             placeholder='Search via name or postcode'/>
           <TouchableHighlight style={Styles.button}
-              underlayColor='#99d9f4'>
+              underlayColor='#99d9f4'
+              onPress={this.onSearchPressed.bind(this)}>
             <Text style={Styles.buttonText}>Go</Text>
           </TouchableHighlight>
         </View>
@@ -88,6 +133,7 @@ class SearchPage extends Component {
           <Text style={Styles.buttonText}>Location</Text>
         </TouchableHighlight>
         <Image source={require('image!house')} style={Styles.image} />
+        {spinner}
       </View>
     );
   }
