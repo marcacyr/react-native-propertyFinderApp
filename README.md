@@ -1,4 +1,4 @@
-# react-native-propertyFinderApp
+# Property Finder App in React Native
 Diving into React Native - time to take it for a spin!
 
 This is from the Ray Wenderlich Tutorial on React Native, which can be found here:
