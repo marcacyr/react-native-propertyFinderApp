@@ -66,45 +66,64 @@ var Styles = StyleSheet.create({
 
 function urlForQueryAndPage(key, value, pageNumber) {
   var data = {
-    country: 'uk',
-    pretty: '1',
-    encoding: 'json',
-    listing_type: 'buy',
-    action: 'search_listings',
-    page: pageNumber
+      country: 'uk',
+      encoding: 'json',
+      listing_type: 'buy',
+      action: 'search_listings',
+      page: pageNumber
   };
   data[key] = value;
 
-  var queryString = Object.keys(data)
+  var querystring = Object.keys(data)
     .map(key => key + '=' + encodeURIComponent(data[key]))
     .join('&');
 
-  return 'http://api.nestoria.co.uk/api?' + queryString;
-}
+  return 'http://api.nestoria.co.uk/api?' + querystring;
+};
 
 class SearchPage extends Component {
   constructor(props){
     super(props);
     this.state = {
       searchString: 'london',
-      isLoading: false
+      isLoading: false,
+      message: ''
     };
   }
+
   onSearchTextChanged(event) {
-    console.log('onSearchTextChanged');
-    this.setState({
-      searchString: event.nativeEvent.text
-    });
-    console.log(this.state.searchString);
+    this.setState({ searchString: event.nativeEvent.text });
   }
+
   _executeQuery(query) {
-    console.log(query);
-    this.setState({ isLoading: true });
+    this.setState({ isLoading: true, message: '' });
+    debugger;
+    fetch(query)
+      .then(response => response.json())
+      .then(json => this._handleResponse(json.response))
+      .catch(error => {
+        this.setState({
+          isLoading: false,
+          message: 'Something bad happened ' + error
+        });
+      });
   }
+
+  _handleResponse(response) {
+    debugger;
+    this.setState({ isLoading: false, message: '' });
+    if (response.application_response_code.substr(0, 1) === '1') {
+      console.log('Properties found: ' + response.listings.length);
+    } else {
+      this.setState({ message: 'Location not recognized; please try again.' });
+    }
+  }
+
   onSearchPressed() {
     var query = urlForQueryAndPage('place_name', this.state.searchString, 1);
     this._executeQuery(query);
   }
+
   render() {
     var spinner = this.state.isLoading ? (<ActivityIndicatorIOS hidden='true' size='large' />) : (<View/>);
     console.log('SearchPage.render');
@@ -134,6 +153,7 @@ class SearchPage extends Component {
         </TouchableHighlight>
         <Image source={require('image!house')} style={Styles.image} />
         {spinner}
+        <Text style={Styles.description}>{this.state.message}</Text>
       </View>
     );
   }
